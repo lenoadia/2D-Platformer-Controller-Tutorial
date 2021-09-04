@@ -8,12 +8,19 @@ public class PlayerController : MonoBehaviour
 
     private bool isFacingRight = true; // states whether the character is facing right or not
     private bool isWalking; // states whether the character is walking or not
+    private bool isGrounded; // states whether the character is on ground or not
+    private bool canJump; // states whether the character can jump or not
 
     private Rigidbody2D rb; // reference to the Rigidbody2D component of the player
     private Animator anim; // reference to the Animator component of the player
 
     public float movementSpeed = 10.0f; // the default horizontal movement speed of the character
     public float jumpForce = 16.0f; // the default vertical movement speed of the character when jumping
+    public float groundCheckRadius; // radius used to detect ground
+
+    public Transform groundCheck; // object used to check for ground
+
+    public LayerMask whatIsGround; // specifies what is considered ground
 
     // Start is called before the first frame update
     void Start()
@@ -28,11 +35,30 @@ public class PlayerController : MonoBehaviour
         CheckInput();
         CheckMovementDirection();
         UpdateAnimations();
+        CheckIfCanJump();
     }
 
     private void FixedUpdate()
     {
         ApplyMovement();
+        CheckSurroundings();
+    }
+
+    private void CheckSurroundings()
+    {
+        isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, whatIsGround); // detects if what is considered ground is colliding with the circle on the groundCheck's position
+    }
+
+    private void CheckIfCanJump()
+    {
+        if (isGrounded && rb.velocity.y < 0.01f)
+        {
+            canJump = true;
+        }
+        else
+        {
+            canJump = false;
+        }
     }
 
     private void CheckMovementDirection()
@@ -73,7 +99,10 @@ public class PlayerController : MonoBehaviour
 
     private void Jump()
     {
-        rb.velocity = new Vector2(rb.velocity.x, jumpForce); // changes the character's 'y' velocity only
+        if (canJump)
+        {
+            rb.velocity = new Vector2(rb.velocity.x, jumpForce); // changes the character's 'y' velocity only
+        }
     }
 
     private void ApplyMovement()
@@ -85,5 +114,10 @@ public class PlayerController : MonoBehaviour
     {
         isFacingRight = !isFacingRight;
         transform.Rotate(0.0f, 180.0f, 0.0f); // rotates the character's sprite on 'y' axis only
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius); // draws a gizmo on groundCheck's position 
     }
 }
