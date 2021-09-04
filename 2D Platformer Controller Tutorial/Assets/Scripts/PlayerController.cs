@@ -6,6 +6,8 @@ public class PlayerController : MonoBehaviour
 {
     private float movementInputDirection; // states whether the player is pushing either 'a' or 'd'
 
+    private int amountOfJumpsLeft; // available number of jumps the character can do
+
     private bool isFacingRight = true; // states whether the character is facing right or not
     private bool isWalking; // states whether the character is walking or not
     private bool isGrounded; // states whether the character is on ground or not
@@ -13,6 +15,8 @@ public class PlayerController : MonoBehaviour
 
     private Rigidbody2D rb; // reference to the Rigidbody2D component of the player
     private Animator anim; // reference to the Animator component of the player
+
+    public int amountOfJumps = 1; // max jumps the character can do
 
     public float movementSpeed = 10.0f; // the default horizontal movement speed of the character
     public float jumpForce = 16.0f; // the default vertical movement speed of the character when jumping
@@ -27,6 +31,7 @@ public class PlayerController : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>(); // gets the reference to the Rigidbody2D component of the player
         anim = GetComponent<Animator>(); // gets the reference to the Animator component of the player
+        amountOfJumpsLeft = amountOfJumps; // sets the jumps available the character can do
     }
 
     // Update is called once per frame
@@ -53,11 +58,16 @@ public class PlayerController : MonoBehaviour
     {
         if (isGrounded && rb.velocity.y < 0.01f)
         {
-            canJump = true;
+            amountOfJumpsLeft = amountOfJumps; // resets the available jumps
+        }
+
+        if (amountOfJumpsLeft <= 0)
+        {
+            canJump = false;
         }
         else
         {
-            canJump = false;
+            canJump = true;
         }
     }
 
@@ -102,6 +112,7 @@ public class PlayerController : MonoBehaviour
         if (canJump)
         {
             rb.velocity = new Vector2(rb.velocity.x, jumpForce); // changes the character's 'y' velocity only
+            amountOfJumpsLeft--; // decreases the jumps available
         }
     }
 
