@@ -10,7 +10,8 @@ public class PlayerController : MonoBehaviour
 
     private Rigidbody2D rb; // reference to the Rigidbody2D component of the player
 
-    public float movementSpeed = 10.0f; // determines the default horizontal movement speed of the character
+    public float movementSpeed = 10.0f; // the default horizontal movement speed of the character
+    public float jumpForce = 16.0f; // the default vertical movement speed of the character when jumping
 
     // Start is called before the first frame update
     void Start()
@@ -45,6 +46,16 @@ public class PlayerController : MonoBehaviour
     private void CheckInput()
     {
         movementInputDirection = Input.GetAxisRaw("Horizontal"); // by default, returns -1 when 'a' is pressed, and 1 when 'd' is pressed
+
+        if (Input.GetButtonDown("Jump"))
+        {
+            Jump();
+        }
+    }
+
+    private void Jump()
+    {
+        rb.velocity = new Vector2(rb.velocity.x, jumpForce); // changes the character's 'y' velocity only
     }
 
     private void ApplyMovement()
