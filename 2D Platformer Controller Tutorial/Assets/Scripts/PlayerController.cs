@@ -12,6 +12,7 @@ public class PlayerController : MonoBehaviour
     private bool isWalking; // states whether the character is walking or not
     private bool isGrounded; // states whether the character is on ground or not
     private bool isTouchingWall; // states whether the character is on touching a wall or not
+    private bool isWallSliding; // states whether the character is sliding on a wall or not
     private bool canJump; // states whether the character can jump or not
 
     private Rigidbody2D rb; // reference to the Rigidbody2D component of the player
@@ -23,6 +24,7 @@ public class PlayerController : MonoBehaviour
     public float jumpForce = 16.0f; // the default vertical movement speed of the character when jumping
     public float groundCheckRadius; // radius used to detect ground
     public float wallCheckDistance; // the distance used to detect walls
+    public float wallSlideSpeed; // states the default speed when the character is sliding on a wall
 
     public Transform groundCheck; // object used to check for ground
     public Transform wallCheck; // object used to check for wall
@@ -44,6 +46,7 @@ public class PlayerController : MonoBehaviour
         CheckMovementDirection();
         UpdateAnimations();
         CheckIfCanJump();
+        CheckIfWallSliding();
     }
 
     private void FixedUpdate()
@@ -52,10 +55,22 @@ public class PlayerController : MonoBehaviour
         CheckSurroundings();
     }
 
+    private void CheckIfWallSliding()
+    {
+        if (isTouchingWall && !isGrounded && rb.velocity.y < 0) // if the character is touching a wall, not grounded, and moving down
+        {
+            isWallSliding = true;
+        }
+        else
+        {
+            isWallSliding = false;
+        }
+    }
+
     private void CheckSurroundings()
     {
         isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, whatIsGround); // detects if what is considered ground is colliding with the circle on the groundCheck's position
-        isTouchingWall = Physics2D.Raycast(wallCheck.position, transform.right, wallCheckDistance, whatIsGround);
+        isTouchingWall = Physics2D.Raycast(wallCheck.position, transform.right, wallCheckDistance, whatIsGround); // detects if what is considered ground/wall is colliding with the raycast from the wallCheck's position
     }
 
     private void CheckIfCanJump()
@@ -125,6 +140,14 @@ public class PlayerController : MonoBehaviour
     private void ApplyMovement()
     {
         rb.velocity = new Vector2(movementSpeed * movementInputDirection, rb.velocity.y); // makes the character move horizontally
+
+        if (isWallSliding)
+        {
+            if (rb.velocity.y < -wallSlideSpeed)
+            {
+                rb.velocity = new Vector2(rb.velocity.x, -wallSlideSpeed); // makes the downward velocit of the character slower
+            }
+        }
     }
 
     private void Flip()
