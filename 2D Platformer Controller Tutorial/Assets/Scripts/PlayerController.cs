@@ -7,6 +7,7 @@ public class PlayerController : MonoBehaviour
     private float movementInputDirection; // states whether the player is pushing either 'a' or 'd'
 
     private int amountOfJumpsLeft; // available number of jumps the character can do
+    private int facingDirection = 1; // stores the current facing direction of the character, -1 is left and 1 is right
 
     private bool isFacingRight = true; // states whether the character is facing right or not
     private bool isWalking; // states whether the character is walking or not
@@ -28,6 +29,11 @@ public class PlayerController : MonoBehaviour
     public float movementForceInAir; // states the force to add to character's velocity when moving in air
     public float airDragMultiplier = 0.95f; // acts like a friction in air that gradually stops the character from moving in air when the player stops pressing the movement button
     public float variableJumpHeightMultiplier = 0.5f; // used to make the character's upward velocity slower when the player stops pressing the jump button
+    public float wallHopForce = 10.0f; // used to calculate the force to apply when the character hops down from sliding on a wall
+    public float wallJumpForce = 20.0f; // used to calculate the force to apply when the character jumps from sliding on a wall
+
+    public Vector2 wallHopDirection; // contains the directions used to calculate the force to apply when the character hops down from sliding on a wall
+    public Vector2 wallJumpDirection; // contains the directions used to calculate the force to apply when the character jumps from sliding on a wall
 
     public Transform groundCheck; // object used to check for ground
     public Transform wallCheck; // object used to check for wall
@@ -40,6 +46,8 @@ public class PlayerController : MonoBehaviour
         rb = GetComponent<Rigidbody2D>(); // gets the reference to the Rigidbody2D component of the player
         anim = GetComponent<Animator>(); // gets the reference to the Animator component of the player
         amountOfJumpsLeft = amountOfJumps; // sets the jumps available the character can do
+        wallHopDirection.Normalize();
+        wallJumpDirection.Normalize();
     }
 
     // Update is called once per frame
@@ -78,7 +86,7 @@ public class PlayerController : MonoBehaviour
 
     private void CheckIfCanJump()
     {
-        if (isGrounded && rb.velocity.y < 0.01f)
+        if ((isGrounded && rb.velocity.y < 0.01f) || isWallSliding)
         {
             amountOfJumpsLeft = amountOfJumps; // resets the available jumps
         }
@@ -140,10 +148,24 @@ public class PlayerController : MonoBehaviour
 
     private void Jump()
     {
-        if (canJump)
+        if (canJump && !isWallSliding)
         {
             rb.velocity = new Vector2(rb.velocity.x, jumpForce); // changes the character's 'y' velocity only
             amountOfJumpsLeft--; // decreases the jumps available
+        }
+        else if (isWallSliding && movementInputDirection == 0 && canJump) // if the charcter is just wall sliding and the player is not pressing a movement button and the character can still jump
+        {
+            isWallSliding = false;
+            amountOfJumpsLeft--;
+            Vector2 forceToAdd = new Vector2(wallHopForce * wallHopDirection.x * -facingDirection, wallHopForce * wallHopDirection.y);
+            rb.AddForce(forceToAdd, ForceMode2D.Impulse); // makes the character to just hop down from wall sliding
+        }
+        else if ((isWallSliding || isTouchingWall) && movementInputDirection != 0 && canJump) // if the charcter is wall sliding or touching a wall and the player is pressing a movement button and the character can still jump
+        {
+            isWallSliding = false;
+            amountOfJumpsLeft--;
+            Vector2 forceToAdd = new Vector2(wallJumpForce * wallJumpDirection.x * movementInputDirection, wallJumpForce * wallJumpDirection.y);
+            rb.AddForce(forceToAdd, ForceMode2D.Impulse); // makes the character jump in the opposite direction from wall sliding
         }
     }
 
@@ -181,6 +203,7 @@ public class PlayerController : MonoBehaviour
     {
         if (!isWallSliding)
         {
+            facingDirection *= -1; // flips the facing of the character
             isFacingRight = !isFacingRight;
             transform.Rotate(0.0f, 180.0f, 0.0f); // rotates the character's sprite on 'y' axis only
         }

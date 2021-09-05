@@ -42138,6 +42138,11 @@ MonoBehaviour:
   wallSlideSpeed: 0
   movementForceInAir: 10
   airDragMultiplier: 0.95
+  variableJumpHeightMultiplier: 0.5
+  wallHopForce: 10
+  wallJumpForce: 20
+  wallHopDirection: {x: 1, y: 0.5}
+  wallJumpDirection: {x: 1, y: 2}
   groundCheck: {fileID: 295806749}
   wallCheck: {fileID: 206662165}
   whatIsGround:
