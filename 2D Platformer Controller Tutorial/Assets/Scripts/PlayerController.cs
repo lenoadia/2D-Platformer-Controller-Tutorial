@@ -25,6 +25,8 @@ public class PlayerController : MonoBehaviour
     public float groundCheckRadius; // radius used to detect ground
     public float wallCheckDistance; // the distance used to detect walls
     public float wallSlideSpeed; // states the default speed when the character is sliding on a wall
+    public float movementForceInAir; // states the force to add to character's velocity when moving in air
+    public float airDragMultiplier = 0.95f; // acts like a friction in air that gradually stops the character from moving in air when the player stops pressing the movement button
 
     public Transform groundCheck; // object used to check for ground
     public Transform wallCheck; // object used to check for wall
@@ -141,7 +143,24 @@ public class PlayerController : MonoBehaviour
 
     private void ApplyMovement()
     {
-        rb.velocity = new Vector2(movementSpeed * movementInputDirection, rb.velocity.y); // makes the character move horizontally
+        if (isGrounded) // if the character is on ground
+        {
+            rb.velocity = new Vector2(movementSpeed * movementInputDirection, rb.velocity.y); // makes the character move horizontally normally
+        }
+        else if (!isGrounded && !isWallSliding && movementInputDirection != 0) // if the character is on air and the player is pressing a movement button
+        {
+            Vector2 forceToAdd = new Vector2(movementForceInAir * movementInputDirection, 0);
+            rb.AddForce(forceToAdd); // applies the force as the horizontal movement of the character in air
+
+            if (Mathf.Abs(rb.velocity.x) > movementSpeed) // if because of continuously adding force to the 'x' velocity of the character the 'x' velocity becomes greater than the intended horizontal movement speed
+            {
+                rb.velocity = new Vector2(movementSpeed * movementInputDirection, rb.velocity.y); // makes the character's horizontal speed as if it's moving on ground
+            }
+        }
+        else if (!isGrounded && !isWallSliding && movementInputDirection == 0) // if the player stops pressing the movement buttons when the character is on air
+        {
+            rb.velocity = new Vector2(rb.velocity.x * airDragMultiplier, rb.velocity.y); // gradually stops the horizontal movement of the character on air
+        }
 
         if (isWallSliding)
         {
@@ -154,8 +173,11 @@ public class PlayerController : MonoBehaviour
 
     private void Flip()
     {
-        isFacingRight = !isFacingRight;
-        transform.Rotate(0.0f, 180.0f, 0.0f); // rotates the character's sprite on 'y' axis only
+        if (!isWallSliding)
+        {
+            isFacingRight = !isFacingRight;
+            transform.Rotate(0.0f, 180.0f, 0.0f); // rotates the character's sprite on 'y' axis only
+        }
     }
 
     private void OnDrawGizmos()

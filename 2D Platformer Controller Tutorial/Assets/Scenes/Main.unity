@@ -42135,6 +42135,9 @@ MonoBehaviour:
   jumpForce: 16
   groundCheckRadius: 0.3
   wallCheckDistance: 0.4
+  wallSlideSpeed: 0
+  movementForceInAir: 10
+  airDragMultiplier: 0.95
   groundCheck: {fileID: 295806749}
   wallCheck: {fileID: 206662165}
   whatIsGround:
