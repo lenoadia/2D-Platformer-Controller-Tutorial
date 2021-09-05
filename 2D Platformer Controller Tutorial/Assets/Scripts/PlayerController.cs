@@ -11,6 +11,7 @@ public class PlayerController : MonoBehaviour
     private bool isFacingRight = true; // states whether the character is facing right or not
     private bool isWalking; // states whether the character is walking or not
     private bool isGrounded; // states whether the character is on ground or not
+    private bool isTouchingWall; // states whether the character is on touching a wall or not
     private bool canJump; // states whether the character can jump or not
 
     private Rigidbody2D rb; // reference to the Rigidbody2D component of the player
@@ -21,8 +22,10 @@ public class PlayerController : MonoBehaviour
     public float movementSpeed = 10.0f; // the default horizontal movement speed of the character
     public float jumpForce = 16.0f; // the default vertical movement speed of the character when jumping
     public float groundCheckRadius; // radius used to detect ground
+    public float wallCheckDistance; // the distance used to detect walls
 
     public Transform groundCheck; // object used to check for ground
+    public Transform wallCheck; // object used to check for wall
 
     public LayerMask whatIsGround; // specifies what is considered ground
 
@@ -52,6 +55,7 @@ public class PlayerController : MonoBehaviour
     private void CheckSurroundings()
     {
         isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, whatIsGround); // detects if what is considered ground is colliding with the circle on the groundCheck's position
+        isTouchingWall = Physics2D.Raycast(wallCheck.position, transform.right, wallCheckDistance, whatIsGround);
     }
 
     private void CheckIfCanJump()
@@ -132,5 +136,6 @@ public class PlayerController : MonoBehaviour
     private void OnDrawGizmos()
     {
         Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius); // draws a gizmo on groundCheck's position 
+        Gizmos.DrawLine(wallCheck.position, new Vector3(wallCheck.position.x + wallCheckDistance, wallCheck.position.y, wallCheck.position.z)); // draws a line from a the character towards its front
     }
 }
