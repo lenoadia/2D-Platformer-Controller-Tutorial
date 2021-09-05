@@ -27,6 +27,7 @@ public class PlayerController : MonoBehaviour
     public float wallSlideSpeed; // states the default speed when the character is sliding on a wall
     public float movementForceInAir; // states the force to add to character's velocity when moving in air
     public float airDragMultiplier = 0.95f; // acts like a friction in air that gradually stops the character from moving in air when the player stops pressing the movement button
+    public float variableJumpHeightMultiplier = 0.5f; // used to make the character's upward velocity slower when the player stops pressing the jump button
 
     public Transform groundCheck; // object used to check for ground
     public Transform wallCheck; // object used to check for wall
@@ -126,9 +127,14 @@ public class PlayerController : MonoBehaviour
     {
         movementInputDirection = Input.GetAxisRaw("Horizontal"); // by default, returns -1 when 'a' is pressed, and 1 when 'd' is pressed
 
-        if (Input.GetButtonDown("Jump"))
+        if (Input.GetButtonDown("Jump")) // if the player stops pressing the jump button, which is the spacebar by default
         {
             Jump();
+        }
+
+        if (Input.GetButtonUp("Jump")) // if the player stops pressing the jump button, which is the spacebar by default
+        {
+            rb.velocity = new Vector2(rb.velocity.x, rb.velocity.y * variableJumpHeightMultiplier); // makes the upward velocity of the character slower
         }
     }
 
