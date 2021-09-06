@@ -41993,9 +41993,9 @@ GameObject:
   m_Component:
   - component: {fileID: 705692716}
   - component: {fileID: 705692715}
+  - component: {fileID: 705692718}
   - component: {fileID: 705692714}
   - component: {fileID: 705692717}
-  - component: {fileID: 705692718}
   - component: {fileID: 705692719}
   m_Layer: 0
   m_Name: Player
@@ -42019,11 +42019,11 @@ Rigidbody2D:
   m_Mass: 1
   m_LinearDrag: 0
   m_AngularDrag: 0.05
-  m_GravityScale: 4
+  m_GravityScale: 8
   m_Material: {fileID: 6200000, guid: c5d36cbea2a405d4c8a1095c2b87d514, type: 2}
   m_Interpolate: 0
   m_SleepingMode: 1
-  m_CollisionDetection: 0
+  m_CollisionDetection: 1
   m_Constraints: 4
 --- !u!212 &705692715
 SpriteRenderer:
@@ -42131,16 +42131,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   amountOfJumps: 1
-  movementSpeed: 10
-  jumpForce: 16
+  movementSpeed: 9
+  jumpForce: 20
   groundCheckRadius: 0.3
-  wallCheckDistance: 0.4
-  wallSlideSpeed: 0
+  wallCheckDistance: 0.65
+  wallSlideSpeed: 1
   movementForceInAir: 10
   airDragMultiplier: 0.95
   variableJumpHeightMultiplier: 0.5
   wallHopForce: 10
-  wallJumpForce: 20
+  wallJumpForce: 30
+  jumpTimerSet: 0.15
+  turnTimerSet: 0.1
   wallHopDirection: {x: 1, y: 0.5}
   wallJumpDirection: {x: 1, y: 2}
   groundCheck: {fileID: 295806749}

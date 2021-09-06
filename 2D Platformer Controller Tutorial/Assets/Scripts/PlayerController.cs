@@ -5,6 +5,8 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     private float movementInputDirection; // states whether the player is pushing either 'a' or 'd'
+    private float jumpTimer;
+    private float turnTimer;
 
     private int amountOfJumpsLeft; // available number of jumps the character can do
     private int facingDirection = 1; // stores the current facing direction of the character, -1 is left and 1 is right
@@ -14,7 +16,12 @@ public class PlayerController : MonoBehaviour
     private bool isGrounded; // states whether the character is on ground or not
     private bool isTouchingWall; // states whether the character is on touching a wall or not
     private bool isWallSliding; // states whether the character is sliding on a wall or not
-    private bool canJump; // states whether the character can jump or not
+    private bool canNormalJump;
+    private bool canWallJump;
+    private bool isAttemptingToJump;
+    private bool checkJumpMultiplier;
+    private bool canMove;
+    private bool canFlip;
 
     private Rigidbody2D rb; // reference to the Rigidbody2D component of the player
     private Animator anim; // reference to the Animator component of the player
@@ -31,6 +38,8 @@ public class PlayerController : MonoBehaviour
     public float variableJumpHeightMultiplier = 0.5f; // used to make the character's upward velocity slower when the player stops pressing the jump button
     public float wallHopForce = 10.0f; // used to calculate the force to apply when the character hops down from sliding on a wall
     public float wallJumpForce = 20.0f; // used to calculate the force to apply when the character jumps from sliding on a wall
+    public float jumpTimerSet = 0.15f;
+    public float turnTimerSet = 0.1f;
 
     public Vector2 wallHopDirection; // contains the directions used to calculate the force to apply when the character hops down from sliding on a wall
     public Vector2 wallJumpDirection; // contains the directions used to calculate the force to apply when the character jumps from sliding on a wall
@@ -58,6 +67,7 @@ public class PlayerController : MonoBehaviour
         UpdateAnimations();
         CheckIfCanJump();
         CheckIfWallSliding();
+        CheckJump();
     }
 
     private void FixedUpdate()
@@ -68,7 +78,7 @@ public class PlayerController : MonoBehaviour
 
     private void CheckIfWallSliding()
     {
-        if (isTouchingWall && !isGrounded && rb.velocity.y < 0) // if the character is touching a wall, not grounded, and moving down
+        if (isTouchingWall && movementInputDirection == facingDirection && rb.velocity.y < 0)
         {
             isWallSliding = true;
         }
@@ -86,18 +96,23 @@ public class PlayerController : MonoBehaviour
 
     private void CheckIfCanJump()
     {
-        if ((isGrounded && rb.velocity.y < 0.01f) || isWallSliding)
+        if (isGrounded && rb.velocity.y < 0.01f)
         {
             amountOfJumpsLeft = amountOfJumps; // resets the available jumps
         }
 
+        if (isTouchingWall)
+        {
+            canWallJump = true;
+        }
+
         if (amountOfJumpsLeft <= 0)
         {
-            canJump = false;
+            canNormalJump = false;
         }
         else
         {
-            canJump = true;
+            canNormalJump = true;
         }
     }
 
@@ -137,57 +152,106 @@ public class PlayerController : MonoBehaviour
 
         if (Input.GetButtonDown("Jump")) // if the player stops pressing the jump button, which is the spacebar by default
         {
-            Jump();
+            if (isGrounded || (amountOfJumpsLeft > 0 && !isTouchingWall))
+            {
+                NormalJump();
+            }
+            else
+            {
+                jumpTimer = jumpTimerSet;
+                isAttemptingToJump = true;
+            }
         }
 
-        if (Input.GetButtonUp("Jump")) // if the player stops pressing the jump button, which is the spacebar by default
+        if (Input.GetButtonDown("Horizontal") && isTouchingWall)
         {
+            if (!isGrounded && movementInputDirection != facingDirection)
+            {
+                canMove = false;
+                canFlip = false;
+                turnTimer = turnTimerSet;
+            }
+        }
+
+        if (!canMove)
+        {
+            turnTimer -= Time.deltaTime;
+
+            if (turnTimer <= 0)
+            {
+                canMove = true;
+                canFlip = true;
+            }
+        }
+
+        if (checkJumpMultiplier && !Input.GetButton("Jump"))
+        {
+            checkJumpMultiplier = false;
             rb.velocity = new Vector2(rb.velocity.x, rb.velocity.y * variableJumpHeightMultiplier); // makes the upward velocity of the character slower
         }
     }
 
-    private void Jump()
+    private void CheckJump()
     {
-        if (canJump && !isWallSliding)
+        if (jumpTimer > 0)
+        {
+            // wall jump
+            if (!isGrounded && isTouchingWall && movementInputDirection != 0 && movementInputDirection != facingDirection)
+            {
+                WallJump();
+            }
+            else if (isGrounded)
+            {
+                NormalJump();
+            }
+        }
+        
+        if (isAttemptingToJump)
+        {
+            jumpTimer -= Time.deltaTime;
+        }
+    }
+
+    private void NormalJump()
+    {
+        if (canNormalJump)
         {
             rb.velocity = new Vector2(rb.velocity.x, jumpForce); // changes the character's 'y' velocity only
             amountOfJumpsLeft--; // decreases the jumps available
+            jumpTimer = 0;
+            isAttemptingToJump = false;
+            checkJumpMultiplier = true;
         }
-        else if (isWallSliding && movementInputDirection == 0 && canJump) // if the charcter is just wall sliding and the player is not pressing a movement button and the character can still jump
+    }
+
+    private void WallJump()
+    {
+        if (canWallJump)
         {
+            rb.velocity = new Vector2(rb.velocity.x, 0.0f);
             isWallSliding = false;
-            amountOfJumpsLeft--;
-            Vector2 forceToAdd = new Vector2(wallHopForce * wallHopDirection.x * -facingDirection, wallHopForce * wallHopDirection.y);
-            rb.AddForce(forceToAdd, ForceMode2D.Impulse); // makes the character to just hop down from wall sliding
-        }
-        else if ((isWallSliding || isTouchingWall) && movementInputDirection != 0 && canJump) // if the charcter is wall sliding or touching a wall and the player is pressing a movement button and the character can still jump
-        {
-            isWallSliding = false;
+            amountOfJumpsLeft = amountOfJumps;
             amountOfJumpsLeft--;
             Vector2 forceToAdd = new Vector2(wallJumpForce * wallJumpDirection.x * movementInputDirection, wallJumpForce * wallJumpDirection.y);
             rb.AddForce(forceToAdd, ForceMode2D.Impulse); // makes the character jump in the opposite direction from wall sliding
+            jumpTimer = 0;
+            isAttemptingToJump = false;
+            checkJumpMultiplier = true;
+            turnTimer = 0;
+            canMove = true;
+            canFlip = true;
         }
     }
 
     private void ApplyMovement()
     {
-        if (isGrounded) // if the character is on ground
-        {
-            rb.velocity = new Vector2(movementSpeed * movementInputDirection, rb.velocity.y); // makes the character move horizontally normally
-        }
-        else if (!isGrounded && !isWallSliding && movementInputDirection != 0) // if the character is on air and the player is pressing a movement button
-        {
-            Vector2 forceToAdd = new Vector2(movementForceInAir * movementInputDirection, 0);
-            rb.AddForce(forceToAdd); // applies the force as the horizontal movement of the character in air
-
-            if (Mathf.Abs(rb.velocity.x) > movementSpeed) // if because of continuously adding force to the 'x' velocity of the character the 'x' velocity becomes greater than the intended horizontal movement speed
-            {
-                rb.velocity = new Vector2(movementSpeed * movementInputDirection, rb.velocity.y); // makes the character's horizontal speed as if it's moving on ground
-            }
-        }
-        else if (!isGrounded && !isWallSliding && movementInputDirection == 0) // if the player stops pressing the movement buttons when the character is on air
+        if (!isGrounded && !isWallSliding && movementInputDirection == 0) // if the player stops pressing the movement buttons when the character is on air
         {
             rb.velocity = new Vector2(rb.velocity.x * airDragMultiplier, rb.velocity.y); // gradually stops the horizontal movement of the character on air
+        }
+        else if (canMove)
+        {
+            rb.velocity = new Vector2(movementSpeed * movementInputDirection, rb.velocity.y); // makes the character move horizontally normally
         }
 
         if (isWallSliding)
@@ -201,7 +265,7 @@ public class PlayerController : MonoBehaviour
 
     private void Flip()
     {
-        if (!isWallSliding)
+        if (!isWallSliding && canFlip)
         {
             facingDirection *= -1; // flips the facing of the character
             isFacingRight = !isFacingRight;
