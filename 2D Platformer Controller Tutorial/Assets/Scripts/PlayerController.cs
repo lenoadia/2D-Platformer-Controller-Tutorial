@@ -25,6 +25,13 @@ public class PlayerController : MonoBehaviour
     private bool canMove; // states whether the character can move horizontally
     private bool canFlip; // states whether the character can flip its direction
     private bool hasWallJumped; // states whether the character has already wall jumped or not
+    private bool isTouchingLedge;
+    private bool canClimbLedge = false;
+    private bool ledgeDetected;
+
+    private Vector2 ledgePosBot;
+    private Vector2 ledgePos1;
+    private Vector2 ledgePos2;
 
     private Rigidbody2D rb; // reference to the Rigidbody2D component of the player
     private Animator anim; // reference to the Animator component of the player
@@ -45,11 +52,17 @@ public class PlayerController : MonoBehaviour
     public float turnTimerSet = 0.1f; // used to set the turn timer
     public float wallJumpTimerSet = 0.5f; // used to set the wall jump timer
 
+    public float ledgeClimbXOffset1 = 0f;
+    public float ledgeClimbYOffset1 = 0f;
+    public float ledgeClimbXOffset2 = 0f;
+    public float ledgeClimbYOffset2 = 0f;
+
     public Vector2 wallHopDirection; // contains the directions used to calculate the force to apply when the character hops down from sliding on a wall
     public Vector2 wallJumpDirection; // contains the directions used to calculate the force to apply when the character jumps from sliding on a wall
 
-    public Transform groundCheck; // object used to check for ground
-    public Transform wallCheck; // object used to check for wall
+    public Transform groundCheck; // will be used as the reference to the object used to check for ground
+    public Transform wallCheck; // will be used as the reference to the object used to check for wall
+    public Transform ledgeCheck; // will be used as the reference to the ledge detecting object
 
     public LayerMask whatIsGround; // specifies what is considered ground
 
@@ -72,6 +85,7 @@ public class PlayerController : MonoBehaviour
         CheckIfCanJump();
         CheckIfWallSliding();
         CheckJump();
+        CheckLedgeClimb();
     }
 
     private void FixedUpdate()
@@ -82,7 +96,8 @@ public class PlayerController : MonoBehaviour
 
     private void CheckIfWallSliding()
     {
-        if (isTouchingWall && movementInputDirection == facingDirection && rb.velocity.y < 0) // if the character is touching a wall, the player is currently pressing a movement button that is the same with the current facing of the character, and the character is falling down
+        if (isTouchingWall && movementInputDirection == facingDirection && rb.velocity.y < 0 && !canClimbLedge) // if the character is touching a wall, the player is currently pressing a movement button that is the same with the current facing of the character,
+        // ,the character is falling down, and the character is not in the state where it can climb a ledge
         {
             isWallSliding = true; // sets the character's state to be wall sliding
         }
@@ -92,10 +107,56 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    private void CheckLedgeClimb()
+    {
+        if (ledgeDetected && !canClimbLedge)
+        {
+            canClimbLedge = true;
+
+            if (isFacingRight)
+            {
+                ledgePos1 = new Vector2(Mathf.Floor(ledgePosBot.x + wallCheckDistance) - ledgeClimbXOffset1, Mathf.Floor(ledgePosBot.y) + ledgeClimbYOffset1);
+                ledgePos2 = new Vector2(Mathf.Floor(ledgePosBot.x + wallCheckDistance) + ledgeClimbXOffset2, Mathf.Floor(ledgePosBot.y) + ledgeClimbYOffset2);
+            }
+            else
+            {
+                ledgePos1 = new Vector2(Mathf.Ceil(ledgePosBot.x - wallCheckDistance) + ledgeClimbXOffset1, Mathf.Floor(ledgePosBot.y) + ledgeClimbYOffset1);
+                ledgePos2 = new Vector2(Mathf.Ceil(ledgePosBot.x - wallCheckDistance) - ledgeClimbXOffset2, Mathf.Floor(ledgePosBot.y) + ledgeClimbYOffset2);
+            }
+
+            canMove = false;
+            canFlip = false;
+
+            anim.SetBool("canClimbLedge", canClimbLedge);
+        }
+
+        if (canClimbLedge)
+        {
+            transform.position = ledgePos1;
+        }
+    }
+
+    public void FinishLedgeClimb()
+    {
+        canClimbLedge = false;
+        transform.position = ledgePos2;
+        canMove = true;
+        canFlip = true;
+        ledgeDetected = false;
+        anim.SetBool("canClimbLedge", canClimbLedge);
+    }
+
     private void CheckSurroundings()
     {
         isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, whatIsGround); // detects if what is considered ground is colliding with the circle on the groundCheck's position
         isTouchingWall = Physics2D.Raycast(wallCheck.position, transform.right, wallCheckDistance, whatIsGround); // detects if what is considered ground/wall is colliding with the raycast from the wallCheck's position
+        isTouchingLedge = Physics2D.Raycast(ledgeCheck.position, transform.right, wallCheckDistance, whatIsGround);
+
+        if (isTouchingWall && !isTouchingLedge && !ledgeDetected) // this means that the topmost part of the ledge is in between 
+        {
+            ledgeDetected = true;
+            ledgePosBot = wallCheck.position;
+        }
     }
 
     private void CheckIfCanJump()
@@ -177,7 +238,7 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        if (!canMove) // if the character is unable to move
+        if (turnTimer >= 0)
         {
             turnTimer -= Time.deltaTime; // decrease the timer for turning
 
