@@ -10,7 +10,7 @@ public class PlayerAfterImageSprite : MonoBehaviour
     private float alpha; // used to keep track of what the alpha currently is
     [SerializeField]
     private float alphaSet = 0.8f; // used to set the alpha when the game object was enabled
-    private float alphaMultiplier = 0.85f; // used to decrease the alpha overtime
+    private float alphaMultiplier = 0.95f; // used to decrease the alpha overtime
 
     private Transform player; // used as a reference to a player game object to get its position and rotation
 
