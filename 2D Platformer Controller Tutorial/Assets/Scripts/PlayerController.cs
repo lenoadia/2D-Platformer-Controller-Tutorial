@@ -8,6 +8,10 @@ public class PlayerController : MonoBehaviour
     private float jumpTimer; // used to temporarily freeze the character on a state where the player can do inputs that will affect the character's jumping mechanism
     private float turnTimer; // used to temporarily freeze the character on a state where the player can do inputs that will affect the character's turning mechanism
     private float wallJumpTimer; // used to temporarily freeze the character on a state where the player can do inputs that will affect the character's wall jumping mechanism
+    private float lastDash = -100f; // used to keep track of the last time you started a dash and will be used to check for the cooldown
+
+    private float dashTimeLeft; // used to keep track of how much longer the dash should be happening
+    private float lastImageXpos; // used to keep track of the last 'x' coordinate to be replaced an after image
 
     private int amountOfJumpsLeft; // available number of jumps the character can do
     private int facingDirection = 1; // stores the current facing direction of the character, -1 is left and 1 is right
@@ -28,6 +32,8 @@ public class PlayerController : MonoBehaviour
     private bool isTouchingLedge; // states if the character is touching a ledge
     private bool canClimbLedge = false; // states if the character can climb the detected ledge
     private bool ledgeDetected; // states if the a ledge was detected in front of the character
+    
+    private bool isDashing; // states whether the character is dashing or not
 
     private Vector2 ledgePosBot; // used to store the position where the ray was being cast as soon as a ledge was detected
     private Vector2 ledgePos1; // used as a position to keep the character on while doing the ledge climbing animation, that is beside the tile which the character is climbing
@@ -51,11 +57,15 @@ public class PlayerController : MonoBehaviour
     public float jumpTimerSet = 0.15f; // used to set the jump timer
     public float turnTimerSet = 0.1f; // used to set the turn timer
     public float wallJumpTimerSet = 0.5f; // used to set the wall jump timer
-
     public float ledgeClimbXOffset1 = 0f; // used to compute the 'x' position for the ledgePost1
     public float ledgeClimbYOffset1 = 0f; // used to compute the 'y' position for the ledgePost1
     public float ledgeClimbXOffset2 = 0f; // used to compute the 'x' position for the ledgePost2
     public float ledgeClimbYOffset2 = 0f; // used to compute the 'y' position for the ledgePost2
+    
+    public float dashTime; // states how long the dash should take
+    public float dashSpeed; // states how fast the character should move when dashing
+    public float distanceBetweenImages; // states how far apart each after image game objects should be placed when dashing
+    public float dashCooldown; // states how long we have to wait before the character can dash again
 
     public Vector2 wallHopDirection; // contains the directions used to calculate the force to apply when the character hops down from sliding on a wall
     public Vector2 wallJumpDirection; // contains the directions used to calculate the force to apply when the character jumps from sliding on a wall
@@ -86,6 +96,7 @@ public class PlayerController : MonoBehaviour
         CheckIfWallSliding();
         CheckJump();
         CheckLedgeClimb();
+        CheckDash();
     }
 
     private void FixedUpdate()
@@ -257,6 +268,55 @@ public class PlayerController : MonoBehaviour
         {
             checkJumpMultiplier = false;
             rb.velocity = new Vector2(rb.velocity.x, rb.velocity.y * variableJumpHeightMultiplier); // makes the upward velocity of the character slower
+        }
+
+        if (Input.GetButtonDown("Dash"))
+        {
+            // attemp to dash only after cooldown
+            // if (Time.time >= (lastDash + dashCooldown))
+            // {
+                AttempToDash();
+            // }
+        }
+    }
+
+    private void AttempToDash()
+    {
+        isDashing = true;
+        dashTimeLeft = dashTime;
+        lastDash = Time.time;
+
+        PlayerAfterImagePool.Instance.GetFromPool();
+        lastImageXpos = transform.position.x;
+    }
+
+    // For setting the dash velocity and checking if the character should be dashing or should stop
+    private void CheckDash()
+    {
+        if (isDashing)
+        {
+            if (dashTimeLeft > 0)
+            {
+                // keep the character from doing other things
+                canMove = false;
+                canFlip = false;
+
+                rb.velocity = new Vector2(dashSpeed * facingDirection, rb.velocity.y);
+                dashTimeLeft -= Time.deltaTime;
+
+                if (Mathf.Abs(transform.position.x - lastImageXpos) > distanceBetweenImages)
+                {
+                    PlayerAfterImagePool.Instance.GetFromPool();
+                    lastImageXpos = transform.position.x;
+                }
+            }
+
+            if (dashTimeLeft <= 0 || isTouchingWall)
+            {
+                isDashing = false;
+                canMove = true;
+                canFlip = true;
+            }
         }
     }
 
