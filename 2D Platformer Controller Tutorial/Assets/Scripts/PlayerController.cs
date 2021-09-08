@@ -196,7 +196,7 @@ public class PlayerController : MonoBehaviour
             Flip();
         }
 
-        if (rb.velocity.x != 0) // if the character is not moving horizontally
+        if (rb.velocity.x > 0.01f || rb.velocity.x < -0.01f) // if the character is virtually not moving horizontally
         {
             isWalking = true;
         }
