@@ -25,13 +25,13 @@ public class PlayerController : MonoBehaviour
     private bool canMove; // states whether the character can move horizontally
     private bool canFlip; // states whether the character can flip its direction
     private bool hasWallJumped; // states whether the character has already wall jumped or not
-    private bool isTouchingLedge;
-    private bool canClimbLedge = false;
-    private bool ledgeDetected;
+    private bool isTouchingLedge; // states if the character is touching a ledge
+    private bool canClimbLedge = false; // states if the character can climb the detected ledge
+    private bool ledgeDetected; // states if the a ledge was detected in front of the character
 
-    private Vector2 ledgePosBot;
-    private Vector2 ledgePos1;
-    private Vector2 ledgePos2;
+    private Vector2 ledgePosBot; // used to store the position where the ray was being cast as soon as a ledge was detected
+    private Vector2 ledgePos1; // used as a position to keep the character on while doing the ledge climbing animation, that is beside the tile which the character is climbing
+    private Vector2 ledgePos2; // used as a position to put the character on after doing the ledge climbing animation, that is above the tile which the character is climbing
 
     private Rigidbody2D rb; // reference to the Rigidbody2D component of the player
     private Animator anim; // reference to the Animator component of the player
@@ -52,10 +52,10 @@ public class PlayerController : MonoBehaviour
     public float turnTimerSet = 0.1f; // used to set the turn timer
     public float wallJumpTimerSet = 0.5f; // used to set the wall jump timer
 
-    public float ledgeClimbXOffset1 = 0f;
-    public float ledgeClimbYOffset1 = 0f;
-    public float ledgeClimbXOffset2 = 0f;
-    public float ledgeClimbYOffset2 = 0f;
+    public float ledgeClimbXOffset1 = 0f; // used to compute the 'x' position for the ledgePost1
+    public float ledgeClimbYOffset1 = 0f; // used to compute the 'y' position for the ledgePost1
+    public float ledgeClimbXOffset2 = 0f; // used to compute the 'x' position for the ledgePost2
+    public float ledgeClimbYOffset2 = 0f; // used to compute the 'y' position for the ledgePost2
 
     public Vector2 wallHopDirection; // contains the directions used to calculate the force to apply when the character hops down from sliding on a wall
     public Vector2 wallJumpDirection; // contains the directions used to calculate the force to apply when the character jumps from sliding on a wall
@@ -109,53 +109,57 @@ public class PlayerController : MonoBehaviour
 
     private void CheckLedgeClimb()
     {
-        if (ledgeDetected && !canClimbLedge)
+        if (ledgeDetected && !canClimbLedge) // if a ledge was detected while the character is not yet on ledge climbing state
         {
-            canClimbLedge = true;
+            canClimbLedge = true; // set a character's state to climbing a ledge
 
-            if (isFacingRight)
+            if (isFacingRight) // if the character is facing right
             {
                 ledgePos1 = new Vector2(Mathf.Floor(ledgePosBot.x + wallCheckDistance) - ledgeClimbXOffset1, Mathf.Floor(ledgePosBot.y) + ledgeClimbYOffset1);
                 ledgePos2 = new Vector2(Mathf.Floor(ledgePosBot.x + wallCheckDistance) + ledgeClimbXOffset2, Mathf.Floor(ledgePosBot.y) + ledgeClimbYOffset2);
             }
-            else
+            else // if the character is facing left
             {
                 ledgePos1 = new Vector2(Mathf.Ceil(ledgePosBot.x - wallCheckDistance) + ledgeClimbXOffset1, Mathf.Floor(ledgePosBot.y) + ledgeClimbYOffset1);
                 ledgePos2 = new Vector2(Mathf.Ceil(ledgePosBot.x - wallCheckDistance) - ledgeClimbXOffset2, Mathf.Floor(ledgePosBot.y) + ledgeClimbYOffset2);
             }
 
+            // keeps the character from doing other things while the climbing animation is happening
             canMove = false;
             canFlip = false;
 
-            anim.SetBool("canClimbLedge", canClimbLedge);
+            anim.SetBool("canClimbLedge", canClimbLedge); // sets the animator's parameter to change the character's animation to climbing since "canClimbLedge" is true
         }
 
-        if (canClimbLedge)
+        if (canClimbLedge) // if the character can climb a ledge
         {
-            transform.position = ledgePos1;
+            transform.position = ledgePos1; // puts the character's position on the initial position of the ledge climbing animation, that is just beside the tile which the character is climbing
         }
     }
 
     public void FinishLedgeClimb()
     {
         canClimbLedge = false;
-        transform.position = ledgePos2;
+        transform.position = ledgePos2; // puts the character's position on the final position of the ledge climbing animation, that is above the tile which the character is climbing
+
+        // allows the character to do other things since the climbing animation is done
         canMove = true;
         canFlip = true;
+
         ledgeDetected = false;
-        anim.SetBool("canClimbLedge", canClimbLedge);
+        anim.SetBool("canClimbLedge", canClimbLedge); // sets the animator's parameter to change the character's animation back to idle since the "canClimbLedge" is now false
     }
 
     private void CheckSurroundings()
     {
         isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, whatIsGround); // detects if what is considered ground is colliding with the circle on the groundCheck's position
         isTouchingWall = Physics2D.Raycast(wallCheck.position, transform.right, wallCheckDistance, whatIsGround); // detects if what is considered ground/wall is colliding with the raycast from the wallCheck's position
-        isTouchingLedge = Physics2D.Raycast(ledgeCheck.position, transform.right, wallCheckDistance, whatIsGround);
+        isTouchingLedge = Physics2D.Raycast(ledgeCheck.position, transform.right, wallCheckDistance, whatIsGround); // detects if what is considered wall is colliding with the raycast from the wallCheck's position
 
-        if (isTouchingWall && !isTouchingLedge && !ledgeDetected) // this means that the topmost part of the ledge is in between 
+        if (isTouchingWall && !isTouchingLedge && !ledgeDetected) // this means that the topmost part of the ledge is in between ledgeCheck position and wallCheck position
         {
             ledgeDetected = true;
-            ledgePosBot = wallCheck.position;
+            ledgePosBot = wallCheck.position; // sets as the bottom position of the ledge
         }
     }
 
