@@ -207,7 +207,8 @@ public class PlayerController : MonoBehaviour
             Flip();
         }
 
-        if (rb.velocity.x > 0.01f || rb.velocity.x < -0.01f) // if the character is virtually not moving horizontally
+        //if (rb.velocity.x > 0.01f || rb.velocity.x < -0.01f) // if the character is virtually not moving horizontally
+        if (Mathf.Abs(rb.velocity.x) >= 0.01f) // if the character is virtually not moving horizontally
         {
             isWalking = true;
         }
@@ -409,6 +410,16 @@ public class PlayerController : MonoBehaviour
                 rb.velocity = new Vector2(rb.velocity.x, -wallSlideSpeed); // makes the downward velocit of the character slower
             }
         }
+    }
+
+    public void DisableFlip()
+    {
+        canFlip = false;
+    }
+
+    public void EnableFlip()
+    {
+        canFlip = true;
     }
 
     private void Flip()
