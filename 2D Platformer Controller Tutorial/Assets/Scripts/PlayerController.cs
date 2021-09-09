@@ -291,6 +291,11 @@ public class PlayerController : MonoBehaviour
         lastImageXpos = transform.position.x;
     }
 
+    public int GetFacingDirection()
+    {
+        return facingDirection;
+    }
+
     // For setting the dash velocity and checking if the character should be dashing or should stop
     private void CheckDash()
     {
