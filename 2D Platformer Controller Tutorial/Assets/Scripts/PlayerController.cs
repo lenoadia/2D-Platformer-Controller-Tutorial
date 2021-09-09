@@ -302,7 +302,8 @@ public class PlayerController : MonoBehaviour
                 canMove = false;
                 canFlip = false;
 
-                rb.velocity = new Vector2(dashSpeed * facingDirection, rb.velocity.y);
+                // rb.velocity = new Vector2(dashSpeed * facingDirection, rb.velocity.y);
+                rb.velocity = new Vector2(dashSpeed * facingDirection, 0);
                 dashTimeLeft -= Time.deltaTime;
 
                 if (Mathf.Abs(transform.position.x - lastImageXpos) > distanceBetweenImages)
