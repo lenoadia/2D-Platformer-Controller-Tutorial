@@ -68,14 +68,12 @@ public class CombatDummyController : MonoBehaviour
 
         if (applyKnockback && currentHealth > 0.0f)
         {
-            // knock back
-            Knockback();
+            Knockback(); // knock back
         }
         
         if (currentHealth <= 0.0f)
         {
-            // die
-            Die();
+            Die(); // die
         }
     }
 

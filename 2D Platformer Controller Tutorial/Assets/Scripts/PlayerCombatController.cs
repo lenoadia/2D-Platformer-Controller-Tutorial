@@ -5,24 +5,30 @@ using UnityEngine;
 public class PlayerCombatController : MonoBehaviour
 {
     [SerializeField]
-    private bool combatEnabled;
+    private bool combatEnabled; // states whether the character is enabled to attack or not
     [SerializeField]
-    private float inputTimer, attack1Radius, attack1Damage;
+    private float inputTimer; // states how long to hold the input for
     [SerializeField]
-    private Transform attack1HitBoxPos;
+    private float attack1Radius; // used as an area of effect when detecting objects to be attacked or damaged
     [SerializeField]
-    private LayerMask whatIsDamageable;
+    private float attack1Damage; // used as amount of the character's damage
+    [SerializeField]
+    private Transform attack1HitBoxPos; // child object used to get the position from where to detect objects to be attacked or damaged
+    [SerializeField]
+    private LayerMask whatIsDamageable; // layer used to make an object damageable
 
-    private bool gotInput, isAttacking, isFirstAttack;
+    private bool gotInput; // states whether the player has given an input
+    private bool isAttacking; // states whether the character is attacking or not
+    private bool isFirstAttack; // used to alternate between two different attack animations
 
-    private float lastInputTime = Mathf.NegativeInfinity;
+    private float lastInputTime = Mathf.NegativeInfinity; // used to record the time the player has given input
 
-    private Animator anim;
+    private Animator anim; // used to refer to the animator component of the game object this script is attached to
 
     private void Start()
     {
-        anim = GetComponent<Animator>();
-        anim.SetBool("canAttack", combatEnabled);
+        anim = GetComponent<Animator>(); // gets a reference to the animator component of this class
+        anim.SetBool("canAttack", combatEnabled); // sets the parameter "canAttack" to whether the character can attack or not
     }
 
     private void Update()
@@ -33,54 +39,59 @@ public class PlayerCombatController : MonoBehaviour
 
     private void CheckCombatInput()
     {
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(0)) // if the player clicks the left mouse button
         {
-            if (combatEnabled)
+            if (combatEnabled) // if the character can attack
             {
-                // attempt combat
-                gotInput = true;
-                lastInputTime = Time.time;
+                gotInput = true; // sets that an input was given by the player
+                lastInputTime = Time.time; // store the time when the last input was given
             }
         }
     }
 
     private void CheckAttacks()
     {
-        if (gotInput)
+        if (gotInput) // if the player has input
         {
-            // perform attack1
-            if (!isAttacking)
+            if (!isAttacking) // if the character currently not attack
             {
                 gotInput = false;
-                isAttacking = true;
-                isFirstAttack = !isFirstAttack;
+                isAttacking = true; // sets the charcter on attacking state
+                isFirstAttack = !isFirstAttack; // alternates between the two attack animations
+
+                // sets the animator's parameters so it will play the attack animation
                 anim.SetBool("attack1", true);
-                anim.SetBool("firstAttack", isFirstAttack);
                 anim.SetBool("isAttacking", isAttacking);
+                anim.SetBool("firstAttack", isFirstAttack); // sets an animator's parameter so it will play either attack 1 or attack 2
             }
         }
 
         if (Time.time >= lastInputTime + inputTimer)
         {
-            // wait for new input
-            gotInput = false;
+            gotInput = false; // wait for new input
         }
     }
 
+    // Detects objects to be damaged
+    // Called on 2nd frame of attack animations
     private void CheckAttackHitBox()
     {
-        Collider2D[] detectedObjects = Physics2D.OverlapCircleAll(attack1HitBoxPos.position, attack1Radius, whatIsDamageable);
+        Collider2D[] detectedObjects = Physics2D.OverlapCircleAll(attack1HitBoxPos.position, attack1Radius, whatIsDamageable); // gets all objects considered damageable in an area of a circle
 
         foreach (Collider2D collider in detectedObjects)
         {
-            collider.transform.parent.SendMessage("Damage", attack1Damage);
-            // instantiate hit particle
+            collider.transform.parent.SendMessage("Damage", attack1Damage); // sends message to the current iteration's object, calling its method called "Damage" with the parameter value of "attack1Damage"
+            // can instantiate hit particle here, but it is better on each enemy so it can be different on different enemies
         }
     }
 
-    private void FInishAttack1()
+    // Cleans up the animation phase
+    // Called on the last frame of the attack animations
+    private void FinishAttack1()
     {
-        isAttacking = false;
+        isAttacking = false; // sets the character to not attacking state
+
+        // sets animator's parameters to change the current animation of the character
         anim.SetBool("isAttacking", isAttacking);
         anim.SetBool("attack1", false);
     }
