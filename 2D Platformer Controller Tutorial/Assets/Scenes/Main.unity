@@ -51471,6 +51471,10 @@ PrefabInstance:
       propertyPath: hitParticle
       value: 
       objectReference: {fileID: 3147579268621672067, guid: 8f2f5b3511b56eb4bbd8ca1f505775e3, type: 3}
+    - target: {fileID: 4784346853207367072, guid: 9b02c6bdf23110d42a7be60e0304f32d, type: 3}
+      propertyPath: applyKnockback
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4784346853207367102, guid: 9b02c6bdf23110d42a7be60e0304f32d, type: 3}
       propertyPath: m_Name
       value: Combat Dummy
