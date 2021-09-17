@@ -313,8 +313,8 @@ MonoBehaviour:
     m_Bits: 64
   knockbackSpeed: {x: 10, y: 5}
   hitParticle: {fileID: 3147579268621672067, guid: 038f4e90556e4aa41a7eb3c8c1435f00, type: 3}
-  deathChunkParticle: {fileID: 0}
-  deathBloodParticle: {fileID: 0}
+  deathChunkParticle: {fileID: 8598716848491215805, guid: a7fc7d7c1537d5743b323a3898cfff62, type: 3}
+  deathBloodParticle: {fileID: 5819051448687831880, guid: 2e9e4e451046027468f49f0f0ca52ab4, type: 3}
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0

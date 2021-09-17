@@ -138,7 +138,10 @@ public class BasicEnemyController : MonoBehaviour
     private void EnterDeadState()
     {
         // spawn chunks and blood
-        Destroy(gameObject);
+        Instantiate(deathChunkParticle, alive.transform.position, deathChunkParticle.transform.rotation);
+        Instantiate(deathBloodParticle, alive.transform.position, deathBloodParticle.transform.rotation);
+        
+        Destroy(gameObject); // removes the enemy from the scene
     }
 
     private void UpdateDeadState()
