@@ -10,7 +10,8 @@ public class PlayerAfterImageSprite : MonoBehaviour
     private float alpha; // used to keep track of what the alpha currently is
     [SerializeField]
     private float alphaSet = 0.8f; // used to set the alpha when the game object was enabled
-    private float alphaMultiplier = 0.95f; // used to decrease the alpha overtime
+    [SerializeField]
+    private float alphaDecay = 0.85f; // used to decrease the alpha overtime
 
     private Transform player; // used as a reference to a player game object to get its position and rotation
 
@@ -36,7 +37,7 @@ public class PlayerAfterImageSprite : MonoBehaviour
 
     private void Update()
     {
-        alpha *= alphaMultiplier; // decreases the alpha
+        alpha -= alphaDecay * Time.deltaTime; // decreases the alpha
 
         // changes the color this objects sprite
         color = new Color(1f, 1f, 1f, alpha);
