@@ -23,6 +23,8 @@ public class PlayerCombatController : MonoBehaviour
 
     private float lastInputTime = Mathf.NegativeInfinity; // used to record the time the player has given input
 
+    private float[] attackDetails = new float[2];
+
     private Animator anim; // used to refer to the animator component of the game object this script is attached to
 
     private void Start()
@@ -78,10 +80,15 @@ public class PlayerCombatController : MonoBehaviour
     {
         Collider2D[] detectedObjects = Physics2D.OverlapCircleAll(attack1HitBoxPos.position, attack1Radius, whatIsDamageable); // gets all objects considered damageable in an area of a circle
 
+        attackDetails[0] = attack1Damage;
+        attackDetails[1] = transform.position.x;
+
         foreach (Collider2D collider in detectedObjects)
         {
-            collider.transform.parent.SendMessage("Damage", attack1Damage); // sends message to the current iteration's object, calling its method called "Damage" with the parameter value of "attack1Damage"
-            // can instantiate hit particle here, but it is better on each enemy so it can be different on different enemies
+            // collider.transform.parent.SendMessage("Damage", attack1Damage); // sends message to the current iteration's object, calling its method called "Damage" with the parameter value of "attack1Damage"
+            collider.transform.parent.SendMessage("Damage", attackDetails); 
+            
+            /* can instantiate hit particle here, but it is better on each enemy so it can be different on different enemies */
         }
     }
 
