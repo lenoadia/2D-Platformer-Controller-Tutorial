@@ -42304,8 +42304,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 59740a1905768584fad288f531cc8b32, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  knockbackDuration: 0.1
-  knockbackSpeed: {x: 10, y: 5}
+  knockbackDuration: 0.2
+  knockbackSpeed: {x: 10, y: 10}
   amountOfJumps: 1
   movementSpeed: 9
   jumpForce: 25
@@ -42324,7 +42324,7 @@ MonoBehaviour:
   ledgeClimbYOffset1: 0
   ledgeClimbXOffset2: 0.5
   ledgeClimbYOffset2: 2
-  dashTime: 0.2
+  dashTime: 0.1
   dashSpeed: 50
   distanceBetweenImages: 0.1
   dashCooldown: 2.5
