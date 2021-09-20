@@ -9,6 +9,9 @@ public class PlayerController : MonoBehaviour
     private float turnTimer; // used to temporarily freeze the character on a state where the player can do inputs that will affect the character's turning mechanism
     private float wallJumpTimer; // used to temporarily freeze the character on a state where the player can do inputs that will affect the character's wall jumping mechanism
     private float lastDash = -100f; // used to keep track of the last time you started a dash and will be used to check for the cooldown
+    private float knockbackStartTime;
+    [SerializeField]
+    private float knockbackDuration;
 
     private float dashTimeLeft; // used to keep track of how much longer the dash should be happening
     private float lastImageXpos; // used to keep track of the last 'x' coordinate to be replaced an after image
@@ -32,8 +35,12 @@ public class PlayerController : MonoBehaviour
     private bool isTouchingLedge; // states if the character is touching a ledge
     private bool canClimbLedge = false; // states if the character can climb the detected ledge
     private bool ledgeDetected; // states if the a ledge was detected in front of the character
-    
+    private bool knockback;
+
     private bool isDashing; // states whether the character is dashing or not
+
+    [SerializeField]
+    private Vector2 knockbackSpeed;
 
     private Vector2 ledgePosBot; // used to store the position where the ray was being cast as soon as a ledge was detected
     private Vector2 ledgePos1; // used as a position to keep the character on while doing the ledge climbing animation, that is beside the tile which the character is climbing
@@ -97,6 +104,7 @@ public class PlayerController : MonoBehaviour
         CheckJump();
         CheckLedgeClimb();
         CheckDash();
+        CheckKnockback();
     }
 
     private void FixedUpdate()
@@ -115,6 +123,27 @@ public class PlayerController : MonoBehaviour
         else
         {
             isWallSliding = false; // sets the character to be no longer wall sliding
+        }
+    }
+
+    public bool GetDashStatus()
+    {
+        return isDashing;
+    }
+
+    public void Knockback(int direction)
+    {
+        knockback = true;
+        knockbackStartTime = Time.time;
+        rb.velocity = new Vector2(knockbackSpeed.x * direction, knockbackSpeed.y);
+    }
+
+    private void CheckKnockback()
+    {
+        if (Time.time >= knockbackStartTime + knockbackDuration && knockback)
+        {
+            knockback = false;
+            rb.velocity = new Vector2(0.0f, rb.velocity.y);
         }
     }
 
@@ -400,11 +429,11 @@ public class PlayerController : MonoBehaviour
 
     private void ApplyMovement()
     {
-        if (!isGrounded && !isWallSliding && movementInputDirection == 0) // if the player stops pressing the movement buttons when the character is on air
+        if (!isGrounded && !isWallSliding && movementInputDirection == 0 && !knockback) // if the player stops pressing the movement buttons when the character is on air
         {
             rb.velocity = new Vector2(rb.velocity.x * airDragMultiplier, rb.velocity.y); // gradually stops the horizontal movement of the character on air
         }
-        else if (canMove)
+        else if (canMove && !knockback)
         {
             rb.velocity = new Vector2(movementSpeed * movementInputDirection, rb.velocity.y); // makes the character move horizontally normally
         }
@@ -430,7 +459,7 @@ public class PlayerController : MonoBehaviour
 
     private void Flip()
     {
-        if (!isWallSliding && canFlip)
+        if (!isWallSliding && canFlip && !knockback)
         {
             facingDirection *= -1; // flips the facing of the character
             isFacingRight = !isFacingRight;

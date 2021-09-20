@@ -27,10 +27,13 @@ public class PlayerCombatController : MonoBehaviour
 
     private Animator anim; // used to refer to the animator component of the game object this script is attached to
 
+    private PlayerController PC;
+
     private void Start()
     {
         anim = GetComponent<Animator>(); // gets a reference to the animator component of this class
         anim.SetBool("canAttack", combatEnabled); // sets the parameter "canAttack" to whether the character can attack or not
+        PC = GetComponent<PlayerController>();
     }
 
     private void Update()
@@ -101,6 +104,27 @@ public class PlayerCombatController : MonoBehaviour
         // sets animator's parameters to change the current animation of the character
         anim.SetBool("isAttacking", isAttacking);
         anim.SetBool("attack1", false);
+    }
+
+    private void Damage(float[] attackDetails)
+    {
+        if (!PC.GetDashStatus())
+        {
+            int direction;
+
+            // damage player here using attackDetails[0]
+
+            if (attackDetails[1] < transform.position.x)
+            {
+                direction = 1;
+            }
+            else
+            {
+                direction = -1;
+            }
+
+            PC.Knockback(direction);
+        }
     }
 
     private void OnDrawGizmos()
