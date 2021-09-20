@@ -62,14 +62,21 @@ public class CombatDummyController : MonoBehaviour
         CheckKnockback();
     }
 
-    private void Damage(float amount)
+    private void Damage(float[] details)
     {
-        currentHealth -= amount; // decreases the current health of the dummy
-        playerFacingDirection = pc.GetFacingDirection(); // gets the facing direction of the attacking character
+        currentHealth -= details[0]; // decreases the current health of the dummy
+
+        if (details[1] < aliveGO.transform.position.x)
+        {
+            playerFacingDirection = 1;   
+        }
+        else
+        {
+            playerFacingDirection = -1;
+        }
 
         Instantiate(hitParticle, aliveAnim.transform.position, Quaternion.Euler(0.0f, 0.0f, Random.Range(0.0f, 360.0f))); // creates a clone of "hitParticle" in the position of the dummy's alive version with a random rotation
 
-        
         if (playerFacingDirection == 1) // if the attacking character is facing right while attacking this dummy
         {
             playerOnLeft = true; // sets that the character is on the left side
